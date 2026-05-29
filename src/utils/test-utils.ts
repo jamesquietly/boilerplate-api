@@ -1,7 +1,9 @@
-import { type ModuleMetadata } from '@nestjs/common';
+import { INestApplication, type ModuleMetadata } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { Test, TestingModule } from '@nestjs/testing';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import cookieParser from 'cookie-parser';
+import { Server } from 'http';
 import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 
 type NestModuleImport = NonNullable<ModuleMetadata['imports']>[number];
@@ -10,12 +12,14 @@ interface TestModuleOptions {
   imports?: NestModuleImport[];
 }
 
-export async function createTestModule(
-  options: TestModuleOptions,
-): Promise<TestingModule> {
+export async function createTestModule(options: TestModuleOptions): Promise<{
+  module: TestingModule;
+  app: INestApplication<Server>;
+  server: Server;
+}> {
   const { imports = [] } = options;
 
-  return Test.createTestingModule({
+  const module = await Test.createTestingModule({
     imports: [
       ConfigModule.forRoot({
         envFilePath: '.env',
@@ -37,4 +41,10 @@ export async function createTestModule(
       ...imports,
     ],
   }).compile();
+
+  const app: INestApplication<Server> = module.createNestApplication();
+  app.use(cookieParser());
+  await app.init();
+
+  return { module, app, server: app.getHttpServer() };
 }

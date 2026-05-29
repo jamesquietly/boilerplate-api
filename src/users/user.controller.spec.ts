@@ -1,25 +1,33 @@
-import { BadRequestException } from '@nestjs/common';
+import { INestApplication } from '@nestjs/common';
 import { DataSource } from 'typeorm';
-import { UserController } from './user.controller';
 import { UserModule } from './user.module';
 import { RegisterDto } from './user.dto';
 import { createTestModule } from 'src/utils/test-utils';
+import { Server } from 'http';
+import request from 'supertest';
 
 describe('UserController (integration with test DB)', () => {
-  let controller: UserController;
   let dataSource: DataSource;
+  let app: INestApplication<Server>;
+  let server: Server;
 
   beforeAll(async () => {
-    const module = await createTestModule({
+    const {
+      module,
+      app: appInstance,
+      server: serverInstance,
+    } = await createTestModule({
       imports: [UserModule],
     });
 
-    controller = module.get<UserController>(UserController);
     dataSource = module.get<DataSource>(DataSource);
+    app = appInstance;
+    server = serverInstance;
   });
 
   afterAll(async () => {
     await dataSource.destroy();
+    await app.close();
   });
 
   describe('register', () => {
@@ -29,11 +37,14 @@ describe('UserController (integration with test DB)', () => {
         password: 'password123',
       };
 
-      const result = await controller.register(dto);
+      const res = await request(server)
+        .post('/users/register')
+        .send(dto)
+        .expect(201);
 
-      expect(result).toBeDefined();
-      expect(result.email).toBe(dto.email);
-      expect(result).toHaveProperty('id');
+      expect(res.body).toBeDefined();
+      expect(res.body.email).toBe(dto.email);
+      expect(res.body).toHaveProperty('id');
     });
 
     it('should throw BadRequestException when email already exists', async () => {
@@ -42,11 +53,14 @@ describe('UserController (integration with test DB)', () => {
         password: 'password123',
       };
 
-      await controller.register(dto);
+      await request(server).post('/users/register').send(dto).expect(201);
 
-      await expect(controller.register(dto)).rejects.toThrow(
-        BadRequestException,
-      );
+      const res = await request(server)
+        .post('/users/register')
+        .send(dto)
+        .expect(400);
+
+      expect(res.body.message).toBe('User already exists');
     });
   });
 });

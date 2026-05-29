@@ -8,6 +8,8 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { JwtStrategy } from './jwt.strategy';
 import { JwtAuthGuard } from './jwt-auth.guard';
+import { JwtRefreshStrategy } from './jwt-refresh.strategy';
+import { JwtRefreshAuthGuard } from './jwt-refresh-auth.guard';
 
 @Module({
   imports: [
@@ -24,7 +26,13 @@ import { JwtAuthGuard } from './jwt-auth.guard';
     TypeOrmModule.forFeature([RefreshToken]),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, JwtAuthGuard],
+  providers: [
+    AuthService,
+    JwtStrategy,
+    JwtAuthGuard,
+    JwtRefreshStrategy,
+    JwtRefreshAuthGuard,
+  ],
   exports: [JwtAuthGuard, JwtModule],
 })
 export class AuthModule {}

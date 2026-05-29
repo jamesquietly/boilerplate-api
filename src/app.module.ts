@@ -24,7 +24,7 @@ import { AuthModule } from './auth/auth.module';
           database: process.env.DB_NAME,
           synchronize: false,
           logging: ['error', 'warn'],
-          entities: [`${process.cwd()}/entities/**/*.{ts,js}`],
+          entities: [`${__dirname}/entities/**/*.{ts,js}`],
           namingStrategy: new SnakeNamingStrategy(),
           extra: {
             max: 10,

@@ -11,5 +11,5 @@ export class LoginDto {
 
 export class RefreshDto {
   @IsString()
-  refreshToken: string;
+  refreshToken?: string;
 }
