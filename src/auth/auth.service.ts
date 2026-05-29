@@ -31,7 +31,8 @@ export class AuthService {
 
   async refreshTokens(rawRefreshToken: string) {
     try {
-      const payload = this.jwtService.verify(rawRefreshToken);
+      const payload: { sub: number; email: string; tokenId?: string } =
+        this.jwtService.verify(rawRefreshToken);
 
       if (!payload.tokenId) {
         throw new UnauthorizedException('Invalid refresh token');
