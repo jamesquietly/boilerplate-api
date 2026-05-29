@@ -12,11 +12,15 @@ interface TestModuleOptions {
   imports?: NestModuleImport[];
 }
 
-export async function createTestModule(options: TestModuleOptions): Promise<{
+export interface TestingInstance {
   module: TestingModule;
   app: INestApplication<Server>;
   server: Server;
-}> {
+}
+
+export async function createTestModule(
+  options: TestModuleOptions,
+): Promise<TestingInstance> {
   const { imports = [] } = options;
 
   const module = await Test.createTestingModule({

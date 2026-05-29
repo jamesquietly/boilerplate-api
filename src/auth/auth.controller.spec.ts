@@ -1,35 +1,22 @@
-import { INestApplication } from '@nestjs/common';
-import { DataSource } from 'typeorm';
 import { AuthModule } from './auth.module';
 import { UserService } from 'src/users/user.service';
-import { createTestModule } from 'src/utils/test-utils';
+import { createTestModule, TestingInstance } from 'src/utils/test-utils';
 import request from 'supertest';
-import { Server } from 'http';
 
 describe('AuthController (integration with test DB)', () => {
   let userService: UserService;
-  let dataSource: DataSource;
-  let app: INestApplication<Server>;
-  let server: Server;
+  let testingInstance: TestingInstance;
 
   beforeAll(async () => {
-    const {
-      module,
-      app: appInstance,
-      server: serverInstance,
-    } = await createTestModule({
+    testingInstance = await createTestModule({
       imports: [AuthModule],
     });
 
-    userService = module.get<UserService>(UserService);
-    dataSource = module.get<DataSource>(DataSource);
-    app = appInstance;
-    server = serverInstance;
+    userService = testingInstance.module.get<UserService>(UserService);
   });
 
   afterAll(async () => {
-    await dataSource.destroy();
-    await app.close();
+    await testingInstance.app.close();
   });
 
   describe('login', () => {
@@ -37,7 +24,7 @@ describe('AuthController (integration with test DB)', () => {
       const email = 'login-valid@example.com';
       await userService.register({ email, password: 'password123' });
 
-      const res = await request(server)
+      const res = await request(testingInstance.server)
         .post('/auth/login')
         .send({ email, password: 'password123' });
 
@@ -54,7 +41,7 @@ describe('AuthController (integration with test DB)', () => {
     });
 
     it('should throw 401 for invalid email', async () => {
-      await request(server)
+      await request(testingInstance.server)
         .post('/auth/login')
         .send({ email: 'nonexistent@example.com', password: 'password123' })
         .expect(401);
@@ -64,7 +51,7 @@ describe('AuthController (integration with test DB)', () => {
       const email = 'login-wrongpw@example.com';
       await userService.register({ email, password: 'password123' });
 
-      await request(server)
+      await request(testingInstance.server)
         .post('/auth/login')
         .send({ email, password: 'wrongpassword' })
         .expect(401);
@@ -77,7 +64,7 @@ describe('AuthController (integration with test DB)', () => {
       await userService.register({ email, password: 'password123' });
 
       // login to get cookies with tokens
-      const loginRes = await request(server)
+      const loginRes = await request(testingInstance.server)
         .post('/auth/login')
         .send({ email, password: 'password123' })
         .expect(200);
@@ -86,7 +73,7 @@ describe('AuthController (integration with test DB)', () => {
       expect(cookies).toBeDefined();
 
       // refresh with login cookies
-      const refreshRes = await request(server)
+      const refreshRes = await request(testingInstance.server)
         .post('/auth/refresh')
         .set('Cookie', cookies)
         .expect(200);
@@ -103,7 +90,7 @@ describe('AuthController (integration with test DB)', () => {
     });
 
     it('should throw 401 for a missing refresh token', async () => {
-      await request(server).post('/auth/refresh').expect(401);
+      await request(testingInstance.server).post('/auth/refresh').expect(401);
     });
 
     it('should throw 401 for a re-used refresh token', async () => {
@@ -111,7 +98,7 @@ describe('AuthController (integration with test DB)', () => {
       await userService.register({ email, password: 'password123' });
 
       // login to get cookies with tokens
-      const loginRes = await request(server)
+      const loginRes = await request(testingInstance.server)
         .post('/auth/login')
         .send({ email, password: 'password123' })
         .expect(200);
@@ -120,13 +107,13 @@ describe('AuthController (integration with test DB)', () => {
       expect(cookies).toBeDefined();
 
       // First refresh - should work
-      await request(server)
+      await request(testingInstance.server)
         .post('/auth/refresh')
         .set('Cookie', cookies)
         .expect(200);
 
       // Second use - should fail (token was rotated)
-      await request(server)
+      await request(testingInstance.server)
         .post('/auth/refresh')
         .set('Cookie', cookies)
         .expect(401);
@@ -139,7 +126,7 @@ describe('AuthController (integration with test DB)', () => {
       await userService.register({ email, password: 'password123' });
 
       // login to get cookies with tokens
-      const loginRes = await request(server)
+      const loginRes = await request(testingInstance.server)
         .post('/auth/login')
         .send({ email, password: 'password123' })
         .expect(200);
@@ -148,13 +135,13 @@ describe('AuthController (integration with test DB)', () => {
       expect(cookies).toBeDefined();
 
       // logout to invalidate refresh token
-      await request(server)
+      await request(testingInstance.server)
         .post('/auth/logout')
         .set('Cookie', cookies)
         .expect(200);
 
       // Refresh token should be invalidated in DB
-      await request(server)
+      await request(testingInstance.server)
         .post('/auth/refresh')
         .set('Cookie', cookies)
         .expect(401);

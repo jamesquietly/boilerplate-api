@@ -1,33 +1,19 @@
-import { INestApplication } from '@nestjs/common';
-import { DataSource } from 'typeorm';
 import { UserModule } from './user.module';
 import { RegisterDto } from './user.dto';
-import { createTestModule } from 'src/utils/test-utils';
-import { Server } from 'http';
+import { createTestModule, TestingInstance } from 'src/utils/test-utils';
 import request from 'supertest';
 
 describe('UserController (integration with test DB)', () => {
-  let dataSource: DataSource;
-  let app: INestApplication<Server>;
-  let server: Server;
+  let testingInstance: TestingInstance;
 
   beforeAll(async () => {
-    const {
-      module,
-      app: appInstance,
-      server: serverInstance,
-    } = await createTestModule({
+    testingInstance = await createTestModule({
       imports: [UserModule],
     });
-
-    dataSource = module.get<DataSource>(DataSource);
-    app = appInstance;
-    server = serverInstance;
   });
 
   afterAll(async () => {
-    await dataSource.destroy();
-    await app.close();
+    await testingInstance.app.close();
   });
 
   describe('register', () => {
@@ -37,7 +23,7 @@ describe('UserController (integration with test DB)', () => {
         password: 'password123',
       };
 
-      const res = await request(server)
+      const res = await request(testingInstance.server)
         .post('/users/register')
         .send(dto)
         .expect(201);
@@ -53,9 +39,12 @@ describe('UserController (integration with test DB)', () => {
         password: 'password123',
       };
 
-      await request(server).post('/users/register').send(dto).expect(201);
+      await request(testingInstance.server)
+        .post('/users/register')
+        .send(dto)
+        .expect(201);
 
-      const res = await request(server)
+      const res = await request(testingInstance.server)
         .post('/users/register')
         .send(dto)
         .expect(400);
