@@ -2,7 +2,7 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from 'src/entities/User';
-import { LoginDto, RegisterDto } from './user.dto';
+import { RegisterDto } from './user.dto';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
@@ -28,20 +28,28 @@ export class UserService {
     return this.userRepository.save(user);
   }
 
-  async login(loginDto: LoginDto) {
-    const foundUser = await this.userRepository.findOne({
-      where: { email: loginDto.email },
+  async login(email: string, password: string): Promise<User | null> {
+    const user = await this.userRepository.findOne({
+      where: { email },
+      select: {
+        id: true,
+        email: true,
+        password: true,
+        created: true,
+        modified: true,
+      },
     });
-    if (!foundUser) {
-      throw new BadRequestException('Invalid email or password');
+    if (!user) {
+      return null;
     }
-    const isPasswordValid = await bcrypt.compare(
-      loginDto.password,
-      foundUser.password,
-    );
+    const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
-      throw new BadRequestException('Invalid email or password');
+      return null;
     }
-    return foundUser;
+    return user;
+  }
+
+  async findById(id: number): Promise<User | null> {
+    return this.userRepository.findOne({ where: { id } });
   }
 }
