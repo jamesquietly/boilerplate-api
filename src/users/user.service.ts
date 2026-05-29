@@ -13,11 +13,9 @@ export class UserService {
   ) {}
 
   async register(registerDto: RegisterDto) {
-    console.log('registerDto', registerDto);
     const foundUser = await this.userRepository.findOne({
       where: { email: registerDto.email },
     });
-    console.log('foundUser', foundUser);
     if (foundUser) {
       throw new BadRequestException('User already exists');
     }
