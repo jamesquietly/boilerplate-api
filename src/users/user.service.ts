@@ -28,7 +28,10 @@ export class UserService {
     return this.userRepository.save(user);
   }
 
-  async login(email: string, password: string): Promise<User | null> {
+  async verifyCredentials(
+    email: string,
+    password: string,
+  ): Promise<User | null> {
     const user = await this.userRepository.findOne({
       where: { email },
       select: {

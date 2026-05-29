@@ -18,7 +18,7 @@ export class AuthService {
   ) {}
 
   async login(loginDto: LoginDto) {
-    const user = await this.userService.login(
+    const user = await this.userService.verifyCredentials(
       loginDto.email,
       loginDto.password,
     );
