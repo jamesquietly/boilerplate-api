@@ -62,8 +62,8 @@ export class AuthController {
   ) {
     const cookieOpts = {
       httpOnly: true,
-      secure: true,
-      sameSite: 'strict' as const,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'none' as const,
       path: '/',
     };
     res.cookie('accessToken', accessToken, cookieOpts);
