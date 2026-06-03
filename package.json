@@ -23,7 +23,9 @@
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "db:generate": "pnpm node --import ts-node/esm -r dotenv/config ./node_modules/typeorm/cli.js migration:generate -d ./data-source.ts",
     "db:migrate:up": "pnpm node --import ts-node/esm -r dotenv/config ./node_modules/typeorm/cli.js migration:run -d ./data-source.ts",
-    "db:migrate:down": "pnpm node --import ts-node/esm -r dotenv/config ./node_modules/typeorm/cli.js migration:revert -d ./data-source.ts"
+    "db:migrate:down": "pnpm node --import ts-node/esm -r dotenv/config ./node_modules/typeorm/cli.js migration:revert -d ./data-source.ts",
+    "db:migrate:up:prod": "typeorm migration:run -d ./dist/data-source.js",
+    "db:migrate:down:prod": "typeorm migration:revert -d ./dist/data-source.js"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",

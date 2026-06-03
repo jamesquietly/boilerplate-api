@@ -14,8 +14,8 @@ const AppDataSource = new DataSource({
   database: process.env.DB_NAME,
   synchronize: false,
   logging: ['error', 'warn'],
-  entities: [`${process.cwd()}/src/entities/**/*.{ts,js}`],
-  migrations: [`${process.cwd()}/src/migrations/**/*.{ts,js}`],
+  entities: [`${process.cwd()}/dist/src/entities/**/*.{ts,js}`],
+  migrations: [`${process.cwd()}/dist/src/migrations/**/*.{ts,js}`],
   migrationsTableName: 'typeorm_migrations',
   namingStrategy: new SnakeNamingStrategy(),
 });
